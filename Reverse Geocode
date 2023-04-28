@@ -1,0 +1,36 @@
+# Import necessary libraries
+
+from pyspark.sql.functions import udf
+
+from pyspark.sql.types import StringType
+
+from geopy.geocoders import Nominatim
+
+# Instantiate a reverse geocoder object
+
+geolocator = Nominatim(user_agent="my_application")
+
+# Define a function to reverse geocode a row of the DataFrame
+
+def reverse_geocode(row):
+
+    latitude = row['latitude']
+
+    longitude = row['longitude']
+
+    location = geolocator.reverse(f"{latitude}, {longitude}")
+
+    return location.address
+
+# Create a UDF (User-Defined Function) to apply the reverse_geocode function to each row of the DataFrame
+
+reverse_geocode_udf = udf(reverse_geocode, StringType())
+
+# Apply the UDF to the DataFrame and create a new DataFrame with the reverse geocoded information
+
+reverse_geocoded_df = df.withColumn("address", reverse_geocode_udf(struct("latitude", "longitude")))
+
+# Join the reverse geocoded information back to the original DataFrame based on a common column
+
+merged_df = df.join(reverse_geocoded_df, on="id")
+
