@@ -1,0 +1,19 @@
+
+from geopy.geocoders import Nominatim
+
+from pyspark.sql.functions import udf
+
+from pyspark.sql.types import StringType
+
+
+geolocator = Nominatim(user_agent="my-application")
+
+def reverse_geocode(lat, lon):
+
+    location = geolocator.reverse(f"{lat}, {lon}")
+
+    return location.address
+
+udf_reverse_geocode = udf(reverse_geocode, StringType())
+
+df = df.withColumn("address", udf_reverse_geocode("latitude", "longitude"))
